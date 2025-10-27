@@ -1,0 +1,553 @@
+digraph DCR_Graph {
+	ReservationCreated [
+		"label"="ReservationCreated"
+		"shape"="ellipse"
+		"style"="filled"
+		"fillcolor"="#D3D3D3"
+		"fontcolor"="#000000"
+	]
+	CheckIn [
+		"label"="CheckIn"
+		"shape"="ellipse"
+		"style"="filled"
+		"fillcolor"="#D3D3D3"
+		"fontcolor"="#000000"
+	]
+	CarOpen [
+		"label"="CarOpen"
+		"shape"="ellipse"
+		"style"="filled"
+		"fillcolor"="#D3D3D3"
+		"fontcolor"="#000000"
+	]
+	UserScan [
+		"label"="UserScan"
+		"shape"="ellipse"
+		"style"="filled"
+		"fillcolor"="#D3D3D3"
+		"fontcolor"="#000000"
+	]
+	IgnitionStart [
+		"label"="IgnitionStart"
+		"shape"="ellipse"
+		"style"="filled"
+		"fillcolor"="#D3D3D3"
+		"fontcolor"="#000000"
+	]
+	Drive [
+		"label"="Drive"
+		"shape"="ellipse"
+		"style"="filled"
+		"fillcolor"="#D3D3D3"
+		"fontcolor"="#000000"
+	]
+	CheckOut [
+		"label"="CheckOut"
+		"shape"="ellipse"
+		"style"="filled"
+		"fillcolor"="#D3D3D3"
+		"fontcolor"="#000000"
+	]
+	ReservationModified [
+		"label"="ReservationModified"
+		"shape"="ellipse"
+		"style"="filled"
+		"fillcolor"="#D3D3D3"
+		"fontcolor"="#000000"
+	]
+	Parked [
+		"label"="Parked"
+		"shape"="ellipse"
+		"style"="filled"
+		"fillcolor"="#D3D3D3"
+		"fontcolor"="#000000"
+	]
+	"Tank/Recharge" [
+		"label"="Tank/Recharge"
+		"shape"="ellipse"
+		"style"="filled"
+		"fillcolor"="#D3D3D3"
+		"fontcolor"="#000000"
+	]
+	Payment [
+		"label"="Payment"
+		"shape"="ellipse"
+		"style"="filled"
+		"fillcolor"="#D3D3D3"
+		"fontcolor"="#000000"
+	]
+	ReservationCancelled [
+		"label"="ReservationCancelled"
+		"shape"="ellipse"
+		"style"="filled"
+		"fillcolor"="#D3D3D3"
+		"fontcolor"="#000000"
+	]
+	ProblemReport [
+		"label"="ProblemReport"
+		"shape"="ellipse"
+		"style"="filled"
+		"fillcolor"="#D3D3D3"
+		"fontcolor"="#000000"
+	]
+	ReservationCreated -> CheckIn [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	Parked -> Payment [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	Drive -> Payment [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	Drive -> "Tank/Recharge" [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	IgnitionStart -> Payment [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	IgnitionStart -> "Tank/Recharge" [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	ReservationCreated -> ReservationModified [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	IgnitionStart -> Parked [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	UserScan -> Payment [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	UserScan -> "Tank/Recharge" [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	ReservationCreated -> ReservationCancelled [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	UserScan -> Parked [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	CheckIn -> CarOpen [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	UserScan -> Drive [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	CarOpen -> Payment [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	CarOpen -> "Tank/Recharge" [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	CarOpen -> Parked [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	CarOpen -> CheckOut [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	CarOpen -> Drive [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	CarOpen -> IgnitionStart [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	CheckIn -> ProblemReport [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	CarOpen -> UserScan [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	CheckIn -> Payment [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	CheckIn -> "Tank/Recharge" [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	CheckIn -> Parked [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	CheckIn -> CheckOut [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	CheckIn -> Drive [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	CheckIn -> IgnitionStart [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	UserScan -> IgnitionStart [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	CheckIn -> UserScan [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	UserScan -> CheckOut [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	ReservationCreated -> ProblemReport [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	ReservationCreated -> Payment [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	ReservationCreated -> "Tank/Recharge" [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	IgnitionStart -> Drive [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	ReservationCreated -> Parked [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	ReservationCreated -> CheckOut [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	ReservationCreated -> Drive [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	Drive -> Parked [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	ReservationCreated -> IgnitionStart [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	ReservationCreated -> UserScan [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	Parked -> "Tank/Recharge" [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	ReservationCreated -> CarOpen [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	"Tank/Recharge" -> Payment [
+		"label"="condition"
+		"color"="#0000FF"
+		"style"="solid"
+	]
+	CheckIn -> CarOpen [
+		"label"="response"
+		"color"="#008000"
+		"style"="dashed"
+	]
+	CarOpen -> UserScan [
+		"label"="response"
+		"color"="#008000"
+		"style"="dashed"
+	]
+	UserScan -> CheckOut [
+		"label"="response"
+		"color"="#008000"
+		"style"="dashed"
+	]
+	IgnitionStart -> Drive [
+		"label"="response"
+		"color"="#008000"
+		"style"="dashed"
+	]
+	Drive -> CheckOut [
+		"label"="response"
+		"color"="#008000"
+		"style"="dashed"
+	]
+	ReservationModified -> CheckIn [
+		"label"="response"
+		"color"="#008000"
+		"style"="dashed"
+	]
+	ReservationModified -> IgnitionStart [
+		"label"="response"
+		"color"="#008000"
+		"style"="dashed"
+	]
+	Parked -> Drive [
+		"label"="response"
+		"color"="#008000"
+		"style"="dashed"
+	]
+	"Tank/Recharge" -> Payment [
+		"label"="response"
+		"color"="#008000"
+		"style"="dashed"
+	]
+	Payment -> Drive [
+		"label"="response"
+		"color"="#008000"
+		"style"="dashed"
+	]
+	ProblemReport -> CheckOut [
+		"label"="response"
+		"color"="#008000"
+		"style"="dashed"
+	]
+	ReservationCreated -> ReservationCreated [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	CheckIn -> CheckIn [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	CarOpen -> CarOpen [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	UserScan -> UserScan [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	IgnitionStart -> IgnitionStart [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	CheckOut -> CheckOut [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ReservationModified -> ReservationModified [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	Parked -> Parked [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	"Tank/Recharge" -> "Tank/Recharge" [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	Payment -> Payment [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ReservationCancelled -> ReservationCancelled [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ProblemReport -> ProblemReport [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ReservationModified -> ReservationCancelled [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ReservationModified -> ProblemReport [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	Parked -> ProblemReport [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ReservationCancelled -> CheckIn [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ReservationCancelled -> CarOpen [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ReservationCancelled -> UserScan [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ReservationCancelled -> IgnitionStart [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ReservationCancelled -> Drive [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ReservationCancelled -> CheckOut [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ReservationCancelled -> ReservationModified [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ReservationCancelled -> Parked [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ReservationCancelled -> "Tank/Recharge" [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ReservationCancelled -> Payment [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ReservationCancelled -> ProblemReport [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ProblemReport -> ReservationModified [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ProblemReport -> Parked [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ProblemReport -> "Tank/Recharge" [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	ProblemReport -> Payment [
+		"label"="exclude"
+		"color"="#FF0000"
+		"style"="dotted"
+	]
+	CarOpen -> UserScan [
+		"label"="include"
+		"color"="#000000"
+		"style"="bold"
+	]
+	UserScan -> IgnitionStart [
+		"label"="include"
+		"color"="#000000"
+		"style"="bold"
+	]
+	ReservationCreated -> ReservationModified [
+		"label"="include"
+		"color"="#000000"
+		"style"="bold"
+	]
+	Drive -> Parked [
+		"label"="include"
+		"color"="#000000"
+		"style"="bold"
+	]
+	Parked -> "Tank/Recharge" [
+		"label"="include"
+		"color"="#000000"
+		"style"="bold"
+	]
+	"Tank/Recharge" -> Payment [
+		"label"="include"
+		"color"="#000000"
+		"style"="bold"
+	]
+	ReservationCreated -> ReservationCancelled [
+		"label"="include"
+		"color"="#000000"
+		"style"="bold"
+	]
+}
