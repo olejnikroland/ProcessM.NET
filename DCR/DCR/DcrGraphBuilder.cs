@@ -13,10 +13,17 @@ public static class DcrGraphBuilder
     /// <param name="id_column">Name of a column with ids in imported .csv file</param>
     /// <param name="activity_column">Name of a column with activities in imported .csv file</param>
     /// <returns>DcrGraph built from given imported log</returns>
-    public static DcrGraph BuildFromImportedLog(ImportedEventLog imported, string id_column, string activity_column)
+    public static DcrGraph BuildFromImportedLog(
+        ImportedEventLog imported,
+        string id_column,
+        string activity_column,
+        HashSet<string>? activityFilter = null,
+        HashSet<string>? relationFilter = null,
+        double threshold = 1.0
+    )
     {
         List<List<string>> traces = LogParser.ParseToTraces(imported, id_column, activity_column);
-        return Build(traces);
+        return Build(traces, activityFilter, relationFilter, threshold);
     }
     
     /// <summary>
@@ -24,19 +31,24 @@ public static class DcrGraphBuilder
     /// </summary>
     /// <param name="log">List of traces from a log</param>
     /// <returns>DCR graph built from given traces</returns>
-    public static DcrGraph Build(List<List<string>> log)
+    public static DcrGraph Build(
+        List<List<string>> log,
+        HashSet<string>? activityFilter = null,
+        HashSet<string>? relationFilter = null,
+        double threshold = 1.0
+    )
     {
         (DcrGraph graph, Dictionary<int, string> eventLabeling) = LogParser.InitializeFromLog(log);
 
-        HashSet<(string, string)> atMostOne = Constraints.AtMostOne(log);
+        HashSet<(string, string)> atMostOne = Constraints.AtMostOne(log, threshold);
         foreach ((string a, string b) in atMostOne)
             graph.Excludes.Add((a, b));
 
-        HashSet<(string, string)> precedence = Constraints.Precedence(log);
+        HashSet<(string, string)> precedence = Constraints.Precedence(log, threshold);
         foreach ((string a, string b) in precedence)
             graph.Conditions.Add((a, b));
 
-        HashSet<(string, string)> responses = Constraints.Response(log);
+        HashSet<(string, string)> responses = Constraints.Response(log, threshold);
         foreach ((string a, string b) in responses)
             graph.Responses.Add((a, b));
 
@@ -72,9 +84,49 @@ public static class DcrGraphBuilder
         DcrGraphOptimizer.RemoveTransitiveConditions(graph);
         DcrGraphOptimizer.RemoveTransitiveResponses(graph);
 
-        HashSet<(string, string)> inferred = Constraints.InferredConditions(log);
+        HashSet<(string, string)> inferred = Constraints.InferredConditions(log, threshold);
         foreach ((string a, string b) in inferred)
             graph.Conditions.Add((a, b));
+        
+        if (activityFilter != null && activityFilter.Count > 0)
+        {
+            graph.Activities = graph.Activities.Where(activityFilter.Contains).ToHashSet();
+
+            graph.Conditions = graph.Conditions
+                .Where(r => activityFilter.Contains(r.Item1) && activityFilter.Contains(r.Item2)).ToHashSet();
+
+            graph.Responses = graph.Responses
+                .Where(r => activityFilter.Contains(r.Item1) && activityFilter.Contains(r.Item2)).ToHashSet();
+
+            graph.Excludes = graph.Excludes
+                .Where(r => activityFilter.Contains(r.Item1) && activityFilter.Contains(r.Item2)).ToHashSet();
+
+            graph.Includes = graph.Includes
+                .Where(r => activityFilter.Contains(r.Item1) && activityFilter.Contains(r.Item2)).ToHashSet();
+        }
+
+        if (relationFilter != null && relationFilter.Count > 0)
+        {
+            if (!relationFilter.Contains("Conditions"))
+            {
+                graph.Conditions = new HashSet<(string, string)>();
+            };
+
+            if (!relationFilter.Contains("Responses"))
+            {
+                graph.Responses = new HashSet<(string, string)>();
+            };
+            
+            if (!relationFilter.Contains("Excludes"))
+            {
+                graph.Excludes = new HashSet<(string, string)>();
+            };
+            
+            if (!relationFilter.Contains("Includes"))
+            {
+                graph.Includes = new HashSet<(string, string)>();
+            };
+        }
 
         return graph;
     }

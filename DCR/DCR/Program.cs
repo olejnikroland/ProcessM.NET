@@ -14,7 +14,22 @@ class Program
         };
 
         ImportedEventLog imported = importer.LoadLog(filePath);
-
+        
+        /*
+        var activityFilter = new HashSet<string>
+        {
+            "ReservationCreated",
+            "CheckIn",
+        };
+        
+        var relationFilter = new HashSet<string>
+        {
+            "Includes",
+            "Conditions",
+        };
+        */
+        
+        //DcrGraph graph = DcrGraphBuilder.BuildFromImportedLog(imported, "UserId", "Action", activityFilter, relationFilter);
         DcrGraph graph = DcrGraphBuilder.BuildFromImportedLog(imported, "UserId", "Action");
 
         Console.WriteLine("Activities:");
@@ -42,6 +57,7 @@ class Program
             new List<string> { "ReservationCreated", "CheckIn", "CarOpen", "IgnitionStart", "Drive", "Drive", "Drive", "Checkout" },
             new List<string> { "ReservationCreated", "CheckIn", "CarOpen", "UserScan", "IgnitionStart", "Drive", "Drive", "Drive", "CheckOut" },
             new List<string> { "ReservationCreated", "CheckIn", "CarOpen", "UserScan", "IgnitionStart", "Drive", "Drive", "Parked", "Payment", "Drive", "Checkout" },
+            new List<string> { "CheckIn", "ReservationCreated" }
         };
 
         var (results, conformanceRate) = DcrConformanceChecker.CheckLog(graph, traces);
@@ -60,7 +76,31 @@ class Program
             }
         }
 
-        Console.WriteLine($"\nConformance Rate: {conformanceRate:F2}%");
+        Console.WriteLine($"\nConformance Rate: {conformanceRate:F2}%\n");
+        
+        foreach (var result in results)
+        {
+            Console.WriteLine($"Trace: {string.Join(", ", result.Trace)}");
+            Console.WriteLine($"Fitness: {result.Fitness:F2}");
+            Console.WriteLine($"Conformant: {result.IsConformant}");
+            Console.WriteLine();
+        }
+        
+        var graph2 = DcrGraphBuilder.BuildFromImportedLog(imported, "UserId", "Action", threshold: 1);
+        
+        Console.WriteLine("\nGraph with threshold = 1.0");
+        Console.WriteLine($"Conditions: {graph2.Conditions.Count}");
+        Console.WriteLine($"Responses: {graph2.Responses.Count}");
+        Console.WriteLine($"Excludes: {graph2.Excludes.Count}");
+        Console.WriteLine($"Includes: {graph2.Includes.Count}");
+        
+        var graph3 = DcrGraphBuilder.BuildFromImportedLog(imported, "UserId", "Action", threshold: 0.5);
+        
+        Console.WriteLine("\nGraph with threshold = 0.5");
+        Console.WriteLine($"Conditions: {graph3.Conditions.Count}");
+        Console.WriteLine($"Responses: {graph3.Responses.Count}");
+        Console.WriteLine($"Excludes: {graph3.Excludes.Count}");
+        Console.WriteLine($"Includes: {graph3.Includes.Count}");
         
         
         string outputPath = "..//..//..//dcr_graph.dot";

@@ -7,35 +7,25 @@ public static class Constraints
     /// </summary>
     /// <param name="log">Event log</param>
     /// <returns>Set of activities with discovered AtMostOne relation</returns>
-    public static HashSet<(string, string)> AtMostOne(List<List<string>> log)
+    public static HashSet<(string, string)> AtMostOne(List<List<string>> log, double threshold = 1.0)
     {
-        HashSet<(string, string)> result = new HashSet<(string, string)>();
-        Dictionary<string, int> activityCounts = new Dictionary<string, int>();
+        HashSet<(string, string)> result = new();
+        var activities = GetAllActivities(log);
+        int totalTraces = log.Count;
 
-        foreach (List<string> trace in log)
+        foreach (var act in activities)
         {
-            HashSet<string> seen = new HashSet<string>();
+            int tracesOk = 0;
 
-            foreach (string activity in trace)
+            foreach (var trace in log)
             {
-                if (seen.Contains(activity))
-                {
-                    if (!activityCounts.ContainsKey(activity))
-                        activityCounts[activity] = 0;
-
-                    activityCounts[activity]++;
-                }
-                else
-                {
-                    seen.Add(activity);
-                }
+                int count = trace.Count(x => x == act);
+                if (count <= 1)
+                    tracesOk++;
             }
-        }
 
-        foreach (string activity in GetAllActivities(log))
-        {
-            if (!activityCounts.ContainsKey(activity))
-                result.Add((activity, activity));
+            if (totalTraces > 0 && (double)tracesOk / totalTraces >= threshold)
+                result.Add((act, act));
         }
 
         return result;
@@ -46,10 +36,11 @@ public static class Constraints
     /// </summary>
     /// <param name="log">Event log</param>
     /// <returns>Set of activities with discovered Precedence relation</returns>
-    public static HashSet<(string, string)> Precedence(List<List<string>> log)
+    public static HashSet<(string, string)> Precedence(List<List<string>> log, double threshold = 1.0)
     {
         HashSet<(string, string)> result = new HashSet<(string, string)>();
         List<string> allActivities = GetAllActivities(log).ToList();
+        int totalTraces = log.Count;
 
         foreach (string a in allActivities)
         {
@@ -57,27 +48,29 @@ public static class Constraints
             {
                 if (a == b) continue;
 
-                bool valid = true;
+                int satisfiedCount = 0;
 
                 foreach (List<string> trace in log)
                 {
-                    if (trace.Contains(b))
+                    bool holds;
+
+                    if (!trace.Contains(b))
+                    {
+                        holds = true;
+                    }
+                    else
                     {
                         int indexB = trace.IndexOf(b);
                         bool aBeforeB = trace.Take(indexB).Contains(a);
-
-                        if (!aBeforeB)
-                        {
-                            valid = false;
-                            break;
-                        }
+                        holds = aBeforeB;
                     }
+
+                    if (holds)
+                        satisfiedCount++;
                 }
 
-                if (valid)
-                {
+                if (totalTraces > 0 && (double)satisfiedCount / totalTraces >= threshold)
                     result.Add((a, b));
-                }
             }
         }
 
@@ -89,52 +82,40 @@ public static class Constraints
     /// </summary>
     /// <param name="log">Event log</param>
     /// <returns>Set of activities with discovered Response relation</returns>
-    public static HashSet<(string, string)> Response(List<List<string>> log)
+    public static HashSet<(string, string)> Response(List<List<string>> log, double threshold = 1.0)
     {
-        HashSet<(string, string)> result = new HashSet<(string, string)>();
-        HashSet<string> all = GetAllActivities(log);
+        HashSet<(string, string)> result = new();
+        var all = GetAllActivities(log);
+        int totalTraces = log.Count;
 
         foreach (string a in all)
         {
             foreach (string b in all)
             {
                 if (a == b) continue;
-                bool alwaysFollowed = true;
 
-                foreach (List<string> trace in log)
+                int satisfied = 0;
+
+                foreach (var trace in log)
                 {
-                    List<int> aIndexes = new List<int>();
-                    bool bFoundAfter = false;
+                    var aIdx = Enumerable.Range(0, trace.Count).Where(i => trace[i] == a).ToList();
+                    bool holds = true;
 
-                    for (int i = 0; i < trace.Count; i++)
+                    foreach (int i in aIdx)
                     {
-                        if (trace[i] == a)
-                            aIndexes.Add(i);
-                    }
-
-                    foreach (int aIndex in aIndexes)
-                    {
-                        bFoundAfter = false;
-                        for (int j = aIndex + 1; j < trace.Count; j++)
+                        bool bAfter = trace.Skip(i + 1).Any(x => x == b);
+                        if (!bAfter)
                         {
-                            if (trace[j] == b)
-                            {
-                                bFoundAfter = true;
-                                break;
-                            }
-                        }
-
-                        if (!bFoundAfter)
-                        {
-                            alwaysFollowed = false;
+                            holds = false;
                             break;
                         }
                     }
 
-                    if (!alwaysFollowed) break;
+                    if (holds)
+                        satisfied++;
                 }
 
-                if (alwaysFollowed)
+                if (totalTraces > 0 && (double)satisfied / totalTraces >= threshold)
                     result.Add((a, b));
             }
         }
@@ -274,44 +255,42 @@ public static class Constraints
     /// </summary>
     /// <param name="log">Event log</param>
     /// <returns>Set of activities with discovered InferredConditions relation</returns>
-    public static HashSet<(string, string)> InferredConditions(List<List<string>> log)
+    public static HashSet<(string, string)> InferredConditions(List<List<string>> log, double threshold = 1.0)
     {
-        HashSet<(string, string)> result = new HashSet<(string, string)>();
-        HashSet<string> all = GetAllActivities(log);
+        HashSet<(string, string)> result = new();
+        var all = GetAllActivities(log);
+        int totalTraces = log.Count;
 
-        foreach (string a in all)
+        foreach (var a in all)
         {
-            foreach (string b in all)
+            foreach (var b in all)
             {
                 if (a == b) continue;
 
-                bool bAlwaysAfterA = true;
+                int satisfied = 0;
 
-                foreach (List<string> trace in log)
+                foreach (var trace in log)
                 {
-                    List<int> aIndexes = new List<int>();
-                    List<int> bIndexes = new List<int>();
+                    var aIdx = Enumerable.Range(0, trace.Count).Where(i => trace[i] == a).ToList();
+                    var bIdx = Enumerable.Range(0, trace.Count).Where(i => trace[i] == b).ToList();
 
-                    for (int i = 0; i < trace.Count; i++)
-                    {
-                        if (trace[i] == a) aIndexes.Add(i);
-                        if (trace[i] == b) bIndexes.Add(i);
-                    }
+                    bool holds = true;
 
-                    foreach (int bIndex in bIndexes)
+                    foreach (var bi in bIdx)
                     {
-                        bool hasA = aIndexes.Any(aIndex => aIndex < bIndex);
+                        bool hasA = aIdx.Any(ai => ai < bi);
                         if (!hasA)
                         {
-                            bAlwaysAfterA = false;
+                            holds = false;
                             break;
                         }
                     }
 
-                    if (!bAlwaysAfterA) break;
+                    if (holds)
+                        satisfied++;
                 }
 
-                if (bAlwaysAfterA)
+                if (totalTraces > 0 && (double)satisfied / totalTraces >= threshold)
                     result.Add((a, b));
             }
         }

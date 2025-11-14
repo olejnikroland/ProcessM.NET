@@ -7,6 +7,8 @@ public static class DcrConformanceChecker
         public List<string> Trace { get; set; } = new();
         public bool IsConformant { get; set; }
         public List<string> Errors { get; set; } = new();
+        public double Fitness { get; set; }
+        public int FitnessErrorCount { get; set; }
     }
     
     /// <summary>
@@ -23,15 +25,17 @@ public static class DcrConformanceChecker
         var executed = new HashSet<string>();
         var pending = new HashSet<string>();
         var included = new HashSet<string>(graph.Activities);
-
         var errors = new List<string>();
 
         foreach (var activity in trace)
         {
+            if (!graph.Activities.Contains(activity))
+                continue;
+            
             if (!included.Contains(activity))
             {
-                errors.Add($"Activity '{activity}' is not included.");
-                return new ConformanceResult { Trace = trace, IsConformant = false, Errors = errors };
+                errors.Add($"Activity '{activity}' was executed while excluded.");
+                continue;
             }
 
             foreach (var (a, b) in graph.Conditions)
@@ -39,7 +43,6 @@ public static class DcrConformanceChecker
                 if (b == activity && !executed.Contains(a))
                 {
                     errors.Add($"Condition failed: '{a}' must precede '{b}'.");
-                    return new ConformanceResult { Trace = trace, IsConformant = false, Errors = errors };
                 }
             }
 
@@ -65,15 +68,19 @@ public static class DcrConformanceChecker
             }
         }
 
-        if (pending.Count > 0)
+        foreach (var p in pending)
+            errors.Add($"Pending response '{p}' was not executed.");
+
+        var result = new ConformanceResult
         {
-            foreach (var p in pending)
-                errors.Add($"Pending response '{p}' was not executed.");
+            Trace = trace,
+            IsConformant = errors.Count == 0,
+            Errors = errors,
+            FitnessErrorCount = errors.Count()
+        };
 
-            return new ConformanceResult { Trace = trace, IsConformant = false, Errors = errors };
-        }
-
-        return new ConformanceResult { Trace = trace, IsConformant = true, Errors = new List<string>() };
+        result.Fitness = ComputeFitness(result, graph);
+        return result;
 
     }
     
@@ -100,6 +107,31 @@ public static class DcrConformanceChecker
         }
 
         double conformanceRate = (double)conformantCount / log.Count * 100.0;
+        
+        foreach (var result in results)
+        {
+            result.Fitness = ComputeFitness(result, graph);
+        }
+
+        results = results.OrderBy(r => r.Fitness).ToList();
+        
         return (results, conformanceRate);
+    }
+    
+    private static double ComputeFitness(ConformanceResult result, DcrGraph graph)
+    {
+        int totalRules =
+            graph.Conditions.Count +
+            graph.Responses.Count +
+            graph.Excludes.Count +
+            graph.Includes.Count;
+
+        if (totalRules == 0)
+            return 1.0;
+
+        int satisfiedRules = totalRules - result.FitnessErrorCount;
+
+        double fitness = Math.Max(0, Math.Min(1, (double)satisfiedRules / totalRules));
+        return fitness;
     }
 }
