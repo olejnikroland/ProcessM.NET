@@ -6,42 +6,48 @@ public static class DcrGraphOptimizer
     ///     Removes irrelevant transitive responses from a given graph
     /// </summary>
     /// <param name="graph">DcrGraph with potential transitive responses</param>
-    public static void RemoveTransitiveResponses(DcrGraph graph)
+    public static void RemoveTransitiveConditions(DcrGraph graph)
     {
-        HashSet<(string, string)> toRemove = new HashSet<(string, string)>();
+        List<(string, string)> edges = graph.Conditions.ToList();
 
-        foreach ((string a, string b) in graph.Responses)
+        foreach (var edge in edges)
         {
-            foreach ((string x, string c) in graph.Responses)
+            if (!graph.Conditions.Contains(edge))
+                continue;
+
+            var (a, b) = edge;
+            
+            graph.Conditions.Remove(edge);
+            
+            if (!HasPath(graph.Conditions, a, b))
             {
-                if (x == b && graph.Responses.Contains((a, c)))
-                    toRemove.Add((a, c));
+                graph.Conditions.Add(edge);
             }
         }
-
-        foreach ((string, string) r in toRemove)
-            graph.Responses.Remove(r);
     }
     
     /// <summary>
     ///     Removes irrelevant transitive conditions from a given graph
     /// </summary>
     /// <param name="graph">DcrGraph with potential transitive conditions</param>
-    public static void RemoveTransitiveConditions(DcrGraph graph)
+    public static void RemoveTransitiveResponses(DcrGraph graph)
     {
-        HashSet<(string, string)> toRemove = new HashSet<(string, string)>();
+        List<(string, string)> edges = graph.Responses.ToList();
 
-        foreach ((string a, string b) in graph.Conditions)
+        foreach (var edge in edges)
         {
-            foreach ((string x, string c) in graph.Conditions)
+            if (!graph.Responses.Contains(edge))
+                continue;
+
+            var (a, b) = edge;
+
+            graph.Responses.Remove(edge);
+
+            if (!HasPath(graph.Responses, a, b))
             {
-                if (x == b && graph.Conditions.Contains((a, c)))
-                    toRemove.Add((a, c));
+                graph.Responses.Add(edge);
             }
         }
-
-        foreach ((string, string) r in toRemove)
-            graph.Conditions.Remove(r);
     }
     
     /// <summary>
@@ -57,15 +63,15 @@ public static class DcrGraphOptimizer
     {
         HashSet<(string, string)> toRemove = new HashSet<(string, string)>();
 
-        foreach ((string s, string t) in graph.Excludes)
+        foreach ((string a, string b) in graph.Excludes)
         {
-            foreach ((string u, string x) in graph.Excludes)
+            foreach ((string x, string y) in graph.Excludes)
             {
-                if (x != t || s == u) continue;
+                if (y != b || a == x) continue;
                 
-                if (alternatePrecedence.Contains((u, s)))
+                if (alternatePrecedence.Contains((x, a)))
                 {
-                    toRemove.Add((s, t));
+                    toRemove.Add((a, b));
                     break;
                 }
             }
@@ -73,5 +79,47 @@ public static class DcrGraphOptimizer
 
         foreach ((string, string) r in toRemove)
             graph.Excludes.Remove(r);
+    }
+    
+    private static bool HasPath(
+        HashSet<(string, string)> edges,
+        string start,
+        string target
+    )
+    {
+        if (start == target) return true;
+        
+        Dictionary<string, List<string>> adj = new();
+        foreach (var (a, b) in edges)
+        {
+            if (!adj.TryGetValue(a, out var list))
+            {
+                list = new List<string>();
+                adj[a] = list;
+            }
+            list.Add(b);
+        }
+
+        HashSet<string> visited = new();
+        Stack<string> stack = new();
+        stack.Push(start);
+        visited.Add(start);
+
+        while (stack.Count > 0)
+        {
+            string a = stack.Pop();
+            if (!adj.TryGetValue(a, out List<string> succ)) continue;
+
+            foreach (string successor in succ)
+            {
+                if (successor == target)
+                    return true;
+
+                if (visited.Add(successor))
+                    stack.Push(successor);
+            }
+        }
+
+        return false;
     }
 }

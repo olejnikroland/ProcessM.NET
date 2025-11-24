@@ -1,3 +1,5 @@
+using DCR.Enums;
+
 namespace DCR;
 using LogImport.CsvImport;
 using LogImport.Models;
@@ -15,22 +17,22 @@ class Program
 
         ImportedEventLog imported = importer.LoadLog(filePath);
         
-        /*
+
         var activityFilter = new HashSet<string>
         {
             "ReservationCreated",
             "CheckIn",
         };
         
-        var relationFilter = new HashSet<string>
+        var relationFilter = new HashSet<RelationType>
         {
-            "Includes",
-            "Conditions",
+            RelationType.Includes,
+            RelationType.Conditions,
         };
-        */
+
         
-        //DcrGraph graph = DcrGraphBuilder.BuildFromImportedLog(imported, "UserId", "Action", activityFilter, relationFilter);
-        DcrGraph graph = DcrGraphBuilder.BuildFromImportedLog(imported, "UserId", "Action");
+        //DcrGraph graph = DcrGraphBuilder.BuildFromImportedLog(imported, "UserId", "Action", "Timestamp", activityFilter, relationFilter);
+        DcrGraph graph = DcrGraphBuilder.BuildFromImportedLog(imported, "UserId", "Action", "Timestamp");
 
         Console.WriteLine("Activities:");
         foreach (var a in graph.Activities)
@@ -38,23 +40,23 @@ class Program
 
         Console.WriteLine("\nExcludes:");
         foreach (var (a, b) in graph.Excludes)
-            Console.WriteLine($"{a} disables {b}");
+            Console.WriteLine($"Exclude({a}, {b})");
 
         Console.WriteLine("\nIncludes:");
         foreach (var (a, b) in graph.Includes)
-            Console.WriteLine($"{a} is directly followed by {b}");
+            Console.WriteLine($"Include({a}, {b})");
 
         Console.WriteLine("\nConditions:");
         foreach (var (a, b) in graph.Conditions)
-            Console.WriteLine($"{a} always happens before {b}");
+            Console.WriteLine($"Condition({a}, {b})");
 
         Console.WriteLine("\nResponses:");
         foreach (var (a, b) in graph.Responses)
-            Console.WriteLine($"If {a} happens, {b} happens too");
+            Console.WriteLine($"Response({a}, {b})");
         
         List<List<string>> traces = new List<List<string>>
         {
-            new List<string> { "ReservationCreated", "CheckIn", "CarOpen", "IgnitionStart", "Drive", "Drive", "Drive", "Checkout" },
+            new List<string> { "ReservationCreated", "CheckIn", "CarOpen", "IgnitionStart", "Drive", "Drive", "Drive", "CheckOut" },
             new List<string> { "ReservationCreated", "CheckIn", "CarOpen", "UserScan", "IgnitionStart", "Drive", "Drive", "Drive", "CheckOut" },
             new List<string> { "ReservationCreated", "CheckIn", "CarOpen", "UserScan", "IgnitionStart", "Drive", "Drive", "Parked", "Payment", "Drive", "Checkout" },
             new List<string> { "CheckIn", "ReservationCreated" }
@@ -86,22 +88,21 @@ class Program
             Console.WriteLine();
         }
         
-        var graph2 = DcrGraphBuilder.BuildFromImportedLog(imported, "UserId", "Action", threshold: 1);
+        var graph2 = DcrGraphBuilder.BuildFromImportedLog(imported, "UserId", "Action", "Timestamp", threshold: 1);
         
         Console.WriteLine("\nGraph with threshold = 1.0");
         Console.WriteLine($"Conditions: {graph2.Conditions.Count}");
         Console.WriteLine($"Responses: {graph2.Responses.Count}");
         Console.WriteLine($"Excludes: {graph2.Excludes.Count}");
         Console.WriteLine($"Includes: {graph2.Includes.Count}");
-        
-        var graph3 = DcrGraphBuilder.BuildFromImportedLog(imported, "UserId", "Action", threshold: 0.5);
+
+        var graph3 = DcrGraphBuilder.BuildFromImportedLog(imported, "UserId", "Action", "Timestamp", threshold: 0.5);
         
         Console.WriteLine("\nGraph with threshold = 0.5");
         Console.WriteLine($"Conditions: {graph3.Conditions.Count}");
         Console.WriteLine($"Responses: {graph3.Responses.Count}");
         Console.WriteLine($"Excludes: {graph3.Excludes.Count}");
         Console.WriteLine($"Includes: {graph3.Includes.Count}");
-        
         
         string outputPath = "..//..//..//dcr_graph.dot";
         await DcrGraphVisualiser.ExportToDotAsync(graph, outputPath);

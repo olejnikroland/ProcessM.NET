@@ -26,33 +26,33 @@ public static class DcrGraphVisualiser
         foreach (var (a, b) in graph.Conditions)
         {
             dotGraph.Add(new DotEdge().From(a).To(b)
-                .WithLabel("condition")
-                .WithColor(DotColor.Blue)
+                .WithLabel("Condition")
+                .WithColor(DotColor.Orange)
                 .WithStyle(DotEdgeStyle.Solid));
         }
 
         foreach (var (a, b) in graph.Responses)
         {
             dotGraph.Add(new DotEdge().From(a).To(b)
-                .WithLabel("response")
-                .WithColor(DotColor.Green)
-                .WithStyle(DotEdgeStyle.Dashed));
+                .WithLabel("Response")
+                .WithColor(DotColor.Blue)
+                .WithStyle(DotEdgeStyle.Solid));
         }
 
         foreach (var (a, b) in graph.Excludes)
         {
             dotGraph.Add(new DotEdge().From(a).To(b)
-                .WithLabel("exclude")
+                .WithLabel("Exclude")
                 .WithColor(DotColor.Red)
-                .WithStyle(DotEdgeStyle.Dotted));
+                .WithStyle(DotEdgeStyle.Solid));
         }
 
         foreach (var (a, b) in graph.Includes)
         {
             dotGraph.Add(new DotEdge().From(a).To(b)
-                .WithLabel("include")
-                .WithColor(DotColor.Black)
-                .WithStyle(DotEdgeStyle.Bold));
+                .WithLabel("Include")
+                .WithColor(DotColor.Green)
+                .WithStyle(DotEdgeStyle.Solid));
         }
 
         await using var writer = new StringWriter();

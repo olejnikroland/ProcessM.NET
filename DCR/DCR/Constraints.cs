@@ -10,22 +10,22 @@ public static class Constraints
     public static HashSet<(string, string)> AtMostOne(List<List<string>> log, double threshold = 1.0)
     {
         HashSet<(string, string)> result = new();
-        var activities = GetAllActivities(log);
+        HashSet<string> activities = GetAllActivities(log);
         int totalTraces = log.Count;
 
-        foreach (var act in activities)
+        foreach (string activity in activities)
         {
             int tracesOk = 0;
 
-            foreach (var trace in log)
+            foreach (List<string> trace in log)
             {
-                int count = trace.Count(x => x == act);
+                int count = trace.Count(x => x == activity);
                 if (count <= 1)
                     tracesOk++;
             }
 
             if (totalTraces > 0 && (double)tracesOk / totalTraces >= threshold)
-                result.Add((act, act));
+                result.Add((activity, activity));
         }
 
         return result;
@@ -38,8 +38,8 @@ public static class Constraints
     /// <returns>Set of activities with discovered Precedence relation</returns>
     public static HashSet<(string, string)> Precedence(List<List<string>> log, double threshold = 1.0)
     {
-        HashSet<(string, string)> result = new HashSet<(string, string)>();
-        List<string> allActivities = GetAllActivities(log).ToList();
+        HashSet<(string, string)> result = new();
+        HashSet<string> allActivities = GetAllActivities(log);
         int totalTraces = log.Count;
 
         foreach (string a in allActivities)
@@ -48,28 +48,30 @@ public static class Constraints
             {
                 if (a == b) continue;
 
-                int satisfiedCount = 0;
+                int satisfied = 0;
 
-                foreach (List<string> trace in log)
+                foreach (var trace in log)
                 {
-                    bool holds;
+                    List<int> aIdx = Enumerable.Range(0, trace.Count).Where(i => trace[i] == a).ToList();
+                    List<int> bIdx = Enumerable.Range(0, trace.Count).Where(i => trace[i] == b).ToList();
 
-                    if (!trace.Contains(b))
+                    bool holds = true;
+                    
+                    foreach (var bi in bIdx)
                     {
-                        holds = true;
-                    }
-                    else
-                    {
-                        int indexB = trace.IndexOf(b);
-                        bool aBeforeB = trace.Take(indexB).Contains(a);
-                        holds = aBeforeB;
+                        bool hasA = aIdx.Any(ai => ai < bi);
+                        if (!hasA)
+                        {
+                            holds = false;
+                            break;
+                        }
                     }
 
                     if (holds)
-                        satisfiedCount++;
+                        satisfied++;
                 }
 
-                if (totalTraces > 0 && (double)satisfiedCount / totalTraces >= threshold)
+                if (totalTraces > 0 && (double)satisfied / totalTraces >= threshold)
                     result.Add((a, b));
             }
         }
@@ -85,12 +87,12 @@ public static class Constraints
     public static HashSet<(string, string)> Response(List<List<string>> log, double threshold = 1.0)
     {
         HashSet<(string, string)> result = new();
-        var all = GetAllActivities(log);
+        HashSet<string> allActivities = GetAllActivities(log);
         int totalTraces = log.Count;
 
-        foreach (string a in all)
+        foreach (string a in allActivities)
         {
-            foreach (string b in all)
+            foreach (string b in allActivities)
             {
                 if (a == b) continue;
 
@@ -130,81 +132,42 @@ public static class Constraints
     /// <returns>Set of activities with discovered ChainPrecedence relation</returns>
     public static HashSet<(string, string)> ChainPrecedence(List<List<string>> log)
     {
-        HashSet<(string, string)> result = new HashSet<(string, string)>();
-        HashSet<string> allActivities = log.SelectMany(trace => trace).ToHashSet();
+        HashSet<string> allActivities = GetAllActivities(log);
+        Dictionary<string, HashSet<string>> candidates = new();
 
-        foreach (string b in allActivities)
+        foreach (string activity in allActivities)
+            candidates[activity] = new HashSet<string>(allActivities.Where(act => act != activity));
+
+        HashSet<string> atMostOnce = AtMostOne(log).Select(x => x.Item1).ToHashSet();
+
+        foreach (List<string> trace in log)
         {
-            string? requiredPredecessor = null;
-            bool valid = true;
+            string last = null;
 
-            foreach (List<string> trace in log)
+            foreach (string activity in trace)
             {
-                for (int i = 1; i < trace.Count; i++)
+                if (last == null)
                 {
-                    if (trace[i] == b)
-                    {
-                        string a = trace[i - 1];
-                        if (requiredPredecessor == null)
-                        {
-                            requiredPredecessor = a;
-                        }
-                        else if (requiredPredecessor != a)
-                        {
-                            valid = false;
-                            break;
-                        }
-                    }
+                    candidates[activity].Clear();
+                }
+                else
+                {
+                    candidates[activity].IntersectWith(new HashSet<string> { last });
                 }
 
-                if (!valid) break;
-                
-                if (trace.First() == b)
-                {
-                    valid = false;
-                    break;
-                }
-            }
-
-            if (valid && requiredPredecessor != null)
-            {
-                result.Add((requiredPredecessor, b));
+                last = activity;
             }
         }
 
-        return result;
-    }
-    
-    /// <summary>
-    ///     Discovers MutuallyExclusive constraints from given log
-    /// </summary>
-    /// <param name="log">Event log</param>
-    /// <returns>Set of activities with discovered MutuallyExclusive relation</returns>
-    public static HashSet<(string, string)> MutuallyExclusive(List<List<string>> log)
-    {
-        HashSet<(string, string)> result = new HashSet<(string, string)>();
-        HashSet<string> allActivities = GetAllActivities(log);
+        HashSet<(string, string)> result = new();
 
-        foreach (string a in allActivities)
+        foreach (string key in candidates.Keys)
         {
-            foreach (string b in allActivities)
-            {
-                if (a == b) continue;
+            if (atMostOnce.Contains(key))
+                continue;
 
-                bool seenTogether = false;
-
-                foreach (List<string> trace in log)
-                {
-                    if (trace.Contains(a) && trace.Contains(b))
-                    {
-                        seenTogether = true;
-                        break;
-                    }
-                }
-
-                if (!seenTogether)
-                    result.Add((a, b));
-            }
+            foreach (string act in candidates[key])
+                result.Add((act, key));
         }
 
         return result;
@@ -217,21 +180,21 @@ public static class Constraints
     /// <returns>Set of activities with discovered NotChainSuccession relation</returns>
     public static HashSet<(string, string)> NotChainSuccession(List<List<string>> log)
     {
-        HashSet<(string, string)> result = new HashSet<(string, string)>();
+        HashSet<(string, string)> result = new();
         HashSet<string> allActivities = GetAllActivities(log);
 
-        foreach (string a in allActivities)
+        foreach (string activity in allActivities)
         {
-            foreach (string b in allActivities)
+            foreach (string act in allActivities)
             {
-                if (a == b) continue;
+                if (activity == act) continue;
                 bool foundDirectSuccession = false;
 
                 foreach (List<string> trace in log)
                 {
                     for (int i = 0; i < trace.Count - 1; i++)
                     {
-                        if (trace[i] == a && trace[i + 1] == b)
+                        if (trace[i] == activity && trace[i + 1] == act)
                         {
                             foundDirectSuccession = true;
                             break;
@@ -243,55 +206,7 @@ public static class Constraints
                 }
 
                 if (!foundDirectSuccession)
-                    result.Add((a, b));
-            }
-        }
-
-        return result;
-    }
-    
-    /// <summary>
-    ///     Discovers InferredConditions constraints from given log
-    /// </summary>
-    /// <param name="log">Event log</param>
-    /// <returns>Set of activities with discovered InferredConditions relation</returns>
-    public static HashSet<(string, string)> InferredConditions(List<List<string>> log, double threshold = 1.0)
-    {
-        HashSet<(string, string)> result = new();
-        var all = GetAllActivities(log);
-        int totalTraces = log.Count;
-
-        foreach (var a in all)
-        {
-            foreach (var b in all)
-            {
-                if (a == b) continue;
-
-                int satisfied = 0;
-
-                foreach (var trace in log)
-                {
-                    var aIdx = Enumerable.Range(0, trace.Count).Where(i => trace[i] == a).ToList();
-                    var bIdx = Enumerable.Range(0, trace.Count).Where(i => trace[i] == b).ToList();
-
-                    bool holds = true;
-
-                    foreach (var bi in bIdx)
-                    {
-                        bool hasA = aIdx.Any(ai => ai < bi);
-                        if (!hasA)
-                        {
-                            holds = false;
-                            break;
-                        }
-                    }
-
-                    if (holds)
-                        satisfied++;
-                }
-
-                if (totalTraces > 0 && (double)satisfied / totalTraces >= threshold)
-                    result.Add((a, b));
+                    result.Add((activity, act));
             }
         }
 
@@ -303,23 +218,70 @@ public static class Constraints
     /// </summary>
     /// <param name="log">Event log</param>
     /// <returns>Set of activities with discovered AlternatePrecedence relation</returns>
-    public static HashSet<(string, string)> AlternatePrecedence(List<List<string>> log)
+    public static HashSet<(string, string)> AlternatePrecedence(List<List<string>> log, double threshold = 1.0)
     {
-        HashSet<(string, string)> result = new HashSet<(string, string)>();
+        HashSet<(string, string)> result = new();
+        HashSet<string> allActivities = GetAllActivities(log);
+        int totalTraces = log.Count;
 
-        foreach (List<string> trace in log)
+        foreach (string activity in allActivities)
         {
-
-            for (int i = 0; i < trace.Count - 1; i++)
+            foreach (string act in allActivities)
             {
-                string a = trace[i];
-                string b = trace[i + 1];
+                if (activity == act) continue;
 
-                result.Add((a, b));
+                int satisfied = 0;
+
+                foreach (var trace in log)
+                {
+                    var bIdx = Enumerable.Range(0, trace.Count).Where(i => trace[i] == act).ToList();
+                    bool holds = true;
+
+                    foreach (var bi in bIdx)
+                    {
+                        if (bi == 0 || trace[bi - 1] != activity)
+                        {
+                            holds = false;
+                            break;
+                        }
+                    }
+
+                    if (holds)
+                        satisfied++;
+                }
+
+                if (totalTraces > 0 && (double)satisfied / totalTraces >= threshold)
+                    result.Add((activity, act));
             }
         }
 
         return result;
+    }
+    
+    public static (Dictionary<string, HashSet<string>> predecessor, 
+        Dictionary<string, HashSet<string>> successor) 
+        DeterminePredecessorSuccessor(List<List<string>> log)
+    {
+        HashSet<string> allActivities = GetAllActivities(log);
+
+        Dictionary<string,HashSet<string>> predecessor =
+            allActivities.ToDictionary(x => x, x => new HashSet<string>());
+        Dictionary<string,HashSet<string>> successor =
+            allActivities.ToDictionary(x => x, x => new HashSet<string>());
+
+        foreach (List<string> trace in log)
+        {
+            for (int i = 0; i < trace.Count; i++)
+            {
+                for (int j = 0; j < i; j++)
+                    predecessor[trace[i]].Add(trace[j]);
+
+                for (int j = i + 1; j < trace.Count; j++)
+                    successor[trace[i]].Add(trace[j]);
+            }
+        }
+
+        return (predecessor, successor);
     }
     
     /// <summary>
@@ -327,11 +289,11 @@ public static class Constraints
     /// </summary>
     /// <param name="log">Event log</param>
     /// <returns>Set of activities with discovered AlternatePrecedence relation</returns>
-    public static bool AreCoOccurring(List<List<string>> log, string a, string b)
+    public static bool AreCoOccurring(List<List<string>> log, string act1, string act2)
     {
         foreach (List<string> trace in log)
         {
-            if (trace.Contains(a) && trace.Contains(b))
+            if (trace.Contains(act1) && trace.Contains(act2))
                 return true;
         }
         return false;
@@ -342,13 +304,13 @@ public static class Constraints
     /// </summary>
     /// <param name="log">Event log</param>
     /// <returns>Set of activities from the log</returns>
-    private static HashSet<string> GetAllActivities(List<List<string>> log)
+    public static HashSet<string> GetAllActivities(List<List<string>> log)
     {
-        HashSet<string> set = new HashSet<string>();
+        HashSet<string> result = new();
         foreach (List<string> trace in log)
             foreach (string activity in trace)
-                set.Add(activity);
-        return set;
+                result.Add(activity);
+        return result;
     }
 }
 

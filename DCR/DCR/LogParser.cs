@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace DCR;
 using System;
 using System.Collections.Generic;
@@ -13,20 +15,32 @@ public static class LogParser
     /// <param name="id_column">Name of a id column in an imported .csv file</param>
     /// <param name="activity_column">Name of an activity column in an imported .csv file</param>
     /// <returns>List of traces</returns>
-    public static List<List<string>> ParseToTraces(ImportedEventLog log, string id_column, string activity_column)
+    public static List<List<string>> ParseToTraces(
+        ImportedEventLog log,
+        string id_column,
+        string activity_column,
+        string timestamp_column
+    )
     {
-        List<string> headers = log.Headers.ToList();;
-        List<string[]> rows = log.Rows;
-        
+        var headers = log.Headers.ToList();
+        var rows = log.Rows;
+
         int caseIdIndex = headers.FindIndex(h => h.Equals(id_column, StringComparison.OrdinalIgnoreCase));
         int activityIndex = headers.FindIndex(h => h.Equals(activity_column, StringComparison.OrdinalIgnoreCase));
+        int timestampIndex = headers.FindIndex(h => h.Equals(timestamp_column, StringComparison.OrdinalIgnoreCase));
 
-        if (caseIdIndex == -1 || activityIndex == -1)
-            throw new Exception("Missing id or activity columns in CSV.");
+        if (caseIdIndex == -1 || activityIndex == -1 || timestampIndex == -1)
+            throw new Exception("Missing id, activity or timestamp columns");
 
-        List<List<string>> grouped = rows
+        const string tsFormat = "dd/MM/yyyy HH:mm:ss";
+
+        var grouped = rows
             .GroupBy(row => row[caseIdIndex])
-            .Select(g => g.Select(row => row[activityIndex]).ToList())
+            .Select(g => g
+                .OrderBy(row => DateTime.ParseExact(row[timestampIndex], tsFormat, CultureInfo.InvariantCulture))
+                .Select(row => row[activityIndex])
+                .ToList()
+            )
             .ToList();
 
         return grouped;
