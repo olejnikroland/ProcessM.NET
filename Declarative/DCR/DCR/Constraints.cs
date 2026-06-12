@@ -1,12 +1,14 @@
-﻿using System.Collections.Generic;
-
+﻿namespace DCR;
 public static class Constraints
 {
     /// <summary>
-    ///     Discovers AtMostOne constraints from given log
+    ///     Discovers AtMostOne constraints from given event log.
     /// </summary>
-    /// <param name="log">Event log</param>
-    /// <returns>Set of activities with discovered AtMostOne relation</returns>
+    /// <param name="log">Event log represented as a list of traces.</param>
+    /// <param name="threshold">Minimum proportion of traces in which a relation must hold to be discovered,
+    /// expressed as a value between 0.0 and 1.0.</param>
+    /// <returns>Set of activities with discovered AtMostOne relation. Tuples inside the set always contain the same
+    /// activity on both positions.</returns>
     public static HashSet<(string, string)> AtMostOne(List<List<string>> log, double threshold = 1.0)
     {
         HashSet<(string, string)> result = new();
@@ -32,10 +34,12 @@ public static class Constraints
     }
     
     /// <summary>
-    ///     Discovers Precedence constraints from given log
+    ///     Discovers Precedence constraints from given log.
     /// </summary>
-    /// <param name="log">Event log</param>
-    /// <returns>Set of activities with discovered Precedence relation</returns>
+    /// <param name="log">Event log represented as a list of traces.</param>
+    /// <param name="threshold">Minimum proportion of traces in which a relation must hold to be discovered,
+    /// expressed as a value between 0.0 and 1.0.</param>
+    /// <returns>Set of tuples representing activities with discovered Precedence constraint.</returns>
     public static HashSet<(string, string)> Precedence(List<List<string>> log, double threshold = 1.0)
     {
         HashSet<(string, string)> result = new();
@@ -80,10 +84,12 @@ public static class Constraints
     }
     
     /// <summary>
-    ///     Discovers Response constraints from given log
+    ///     Discovers Response constraints from given log.
     /// </summary>
-    /// <param name="log">Event log</param>
-    /// <returns>Set of activities with discovered Response relation</returns>
+    /// <param name="log">Event log represented as a list of traces.</param>
+    /// <param name="threshold">Minimum proportion of traces in which a relation must hold to be discovered,
+    /// expressed as a value between 0.0 and 1.0.</param>
+    /// <returns>Set of tuples representing activities with discovered Response constraint.</returns>
     public static HashSet<(string, string)> Response(List<List<string>> log, double threshold = 1.0)
     {
         HashSet<(string, string)> result = new();
@@ -128,8 +134,8 @@ public static class Constraints
     /// <summary>
     ///     Discovers ChainPrecedence constraints from given log
     /// </summary>
-    /// <param name="log">Event log</param>
-    /// <returns>Set of activities with discovered ChainPrecedence relation</returns>
+    /// <param name="log">Event log represented as a list of traces.</param>
+    /// <returns>Set of tuples representing activities with discovered ChainPrecedence constraint.</returns>
     public static HashSet<(string, string)> ChainPrecedence(List<List<string>> log)
     {
         HashSet<string> allActivities = GetAllActivities(log);
@@ -142,7 +148,7 @@ public static class Constraints
 
         foreach (List<string> trace in log)
         {
-            string last = null;
+            string? last = null;
 
             foreach (string activity in trace)
             {
@@ -216,8 +222,10 @@ public static class Constraints
     /// <summary>
     ///     Discovers AlternatePrecedence constraints from given log
     /// </summary>
-    /// <param name="log">Event log</param>
-    /// <returns>Set of activities with discovered AlternatePrecedence relation</returns>
+    /// <param name="log">Event log represented as a list of traces.</param>
+    /// <param name="threshold">Minimum proportion of traces in which a relation must hold to be discovered,
+    /// expressed as a value between 0.0 and 1.0.</param>
+    /// <returns>Set of tuples representing activities with discovered AlternatePrecedence constraint.</returns>
     public static HashSet<(string, string)> AlternatePrecedence(List<List<string>> log, double threshold = 1.0)
     {
         HashSet<(string, string)> result = new();
@@ -258,6 +266,16 @@ public static class Constraints
         return result;
     }
     
+    
+    /// <summary>
+    ///     For each activity in the log, creates a set of predecessors and successors across all traces.
+    /// </summary>
+    /// <param name="log">Event log represented as a list of traces.</param>
+    /// <returns>
+    ///     A tuple of two dictionaries. First position of the tuple contains a dictionary of predecessors,
+    ///     where activity is the key for its predecessor values. Second position of the tuple contains a dictionary of
+    ///     successors, where activity is the key for its successor values.
+    /// </returns>
     public static (Dictionary<string, HashSet<string>> predecessor, 
         Dictionary<string, HashSet<string>> successor) 
         DeterminePredecessorSuccessor(List<List<string>> log)
@@ -265,9 +283,9 @@ public static class Constraints
         HashSet<string> allActivities = GetAllActivities(log);
 
         Dictionary<string,HashSet<string>> predecessor =
-            allActivities.ToDictionary(x => x, x => new HashSet<string>());
+            allActivities.ToDictionary(x => x, _ => new HashSet<string>());
         Dictionary<string,HashSet<string>> successor =
-            allActivities.ToDictionary(x => x, x => new HashSet<string>());
+            allActivities.ToDictionary(x => x, _ => new HashSet<string>());
 
         foreach (List<string> trace in log)
         {
@@ -285,10 +303,12 @@ public static class Constraints
     }
     
     /// <summary>
-    ///     Checks if given activities are occuring together in any trace of a given log
+    ///     Checks if given activities are occuring together in any trace of a given log.
     /// </summary>
-    /// <param name="log">Event log</param>
-    /// <returns>Set of activities with discovered AlternatePrecedence relation</returns>
+    /// <param name="log">Event log represented as a list of traces.</param>
+    /// <param name="act1">First given activity.</param>
+    /// <param name="act2">Second given activity.</param>
+    /// <returns>True if both activities appear in the same trace, False if they do not appear in the same trace.</returns>
     public static bool AreCoOccurring(List<List<string>> log, string act1, string act2)
     {
         foreach (List<string> trace in log)
@@ -300,10 +320,10 @@ public static class Constraints
     }
 
     /// <summary>
-    ///     Gets all activities from a given log
+    ///     Gets all activities from a given log.
     /// </summary>
-    /// <param name="log">Event log</param>
-    /// <returns>Set of activities from the log</returns>
+    /// <param name="log">Event log represented as a list of traces.</param>
+    /// <returns>Set of all activities from the log.</returns>
     public static HashSet<string> GetAllActivities(List<List<string>> log)
     {
         HashSet<string> result = new();

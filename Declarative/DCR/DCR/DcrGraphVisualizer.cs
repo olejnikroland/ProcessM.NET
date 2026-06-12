@@ -6,6 +6,11 @@ namespace DCR;
 
 public static class DcrGraphVisualiser
 {
+    /// <summary>
+    ///     Exports a given DCR graph to a DOT file format.
+    /// </summary>
+    /// <param name="graph">DCR graph to export.</param>
+    /// <param name="filePath">Path to the output DOT file.</param>
     public static async Task ExportToDotAsync(DcrGraph graph, string filePath)
     {
         var dotGraph = new DotGraph().WithIdentifier("DCR_Graph").Directed();

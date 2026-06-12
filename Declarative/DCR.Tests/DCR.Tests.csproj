@@ -16,6 +16,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\DCR\DCR\DCR.csproj" />
-        <ProjectReference Include="..\..\ProcessM.NET\Import\LogImport\LogImport.csproj" />
+        <ProjectReference Include="..\..\..\ProcessM.NET\Import\LogImport\LogImport.csproj" />
     </ItemGroup>
 </Project>

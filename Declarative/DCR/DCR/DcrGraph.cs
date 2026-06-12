@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-
+﻿namespace DCR;
 /// <summary>
-///     Represents a DCR graph
+///     Represents a DCR graph.
 /// </summary>
 public class DcrGraph
 {

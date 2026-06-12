@@ -1,0 +1,21 @@
+digraph DCR_Graph {
+	ReservationCreated [
+		"label"="ReservationCreated"
+		"shape"="ellipse"
+		"style"="filled"
+		"fillcolor"="#D3D3D3"
+		"fontcolor"="#000000"
+	]
+	CheckIn [
+		"label"="CheckIn"
+		"shape"="ellipse"
+		"style"="filled"
+		"fillcolor"="#D3D3D3"
+		"fontcolor"="#000000"
+	]
+	ReservationCreated -> CheckIn [
+		"label"="Condition"
+		"color"="#FFA500"
+		"style"="solid"
+	]
+}

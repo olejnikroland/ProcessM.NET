@@ -1,7 +1,10 @@
 ﻿namespace DCR;
 
 public static class DcrConformanceChecker
-{
+{   
+    /// <summary>
+    ///     Represents a result conformance checking of a trace.
+    /// </summary>
     public class ConformanceResult
     {
         public List<string> Trace { get; set; } = new();
@@ -12,13 +15,13 @@ public static class DcrConformanceChecker
     }
     
     /// <summary>
-    ///     Conformance checks trace against a DCR graph
+    ///     Conformance checks trace against a DCR graph.
     /// </summary>
-    /// <param name="graph">DCR graph containing discovered relations</param>
-    /// <param name="trace">Given trace to check against a DCR graph</param>
+    /// <param name="graph">DCR graph containing discovered relations.</param>
+    /// <param name="trace">Given trace to check against a DCR graph.</param>
     /// <returns>
     ///     ConformanceResult containing checked trace, its conformance status and information about why the trace was
-    ///     not compliant in the event that it does not pass conformance checking
+    ///     not compliant in the event that it does not pass conformance checking.
     /// </returns>
     public static ConformanceResult CheckTrace(DcrGraph graph, List<string> trace)
     {
@@ -85,12 +88,13 @@ public static class DcrConformanceChecker
     }
     
     /// <summary>
-    ///     Conformance checks given log against a DCR graph
+    ///     Conformance checks given log against a DCR graph.
     /// </summary>
-    /// <param name="graph">DCR graph containing discovered relations</param>
-    /// <param name="log">Log to compare against a given DCR graph</param>
+    /// <param name="graph">DCR graph containing discovered relations.</param>
+    /// <param name="log">Event log to compare against a given DCR graph.</param>
     /// <returns>
-    ///     List of results for each trace and percentage of traces that passed the conformance checking
+    ///     Tuple containing a list of results for each trace
+    ///     and percentage of traces that passed the conformance checking.
     /// </returns>
     public static (List<ConformanceResult> Results, double ConformanceRate) CheckLog(DcrGraph graph, List<List<string>> log)
     {
@@ -118,6 +122,14 @@ public static class DcrConformanceChecker
         return (results, conformanceRate);
     }
     
+    /// <summary>
+    ///     Computes fitness of a conformance checking result
+    /// </summary>
+    /// <param name="result">Result of a conformance checking.</param>
+    /// <param name="graph">DCR graph to compare the result to.</param>
+    /// <returns>
+    ///     Fitness rate of a result representing a conformance checked trace. Ranges from 0.0 to 1.0.
+    /// </returns>
     private static double ComputeFitness(ConformanceResult result, DcrGraph graph)
     {
         int totalRules =

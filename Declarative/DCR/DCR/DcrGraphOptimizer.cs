@@ -3,9 +3,9 @@
 public static class DcrGraphOptimizer
 {
     /// <summary>
-    ///     Removes irrelevant transitive responses from a given graph
+    ///     Removes irrelevant transitive responses from a DCR graph
     /// </summary>
-    /// <param name="graph">DcrGraph with potential transitive responses</param>
+    /// <param name="graph">DcrGraph with potential transitively redundant responses</param>
     public static void RemoveTransitiveConditions(DcrGraph graph)
     {
         List<(string, string)> edges = graph.Conditions.ToList();
@@ -27,9 +27,9 @@ public static class DcrGraphOptimizer
     }
     
     /// <summary>
-    ///     Removes irrelevant transitive conditions from a given graph
+    ///     Removes irrelevant transitive conditions from a given DCR graph
     /// </summary>
-    /// <param name="graph">DcrGraph with potential transitive conditions</param>
+    /// <param name="graph">DcrGraph with potential transitively redundant conditions</param>
     public static void RemoveTransitiveResponses(DcrGraph graph)
     {
         List<(string, string)> edges = graph.Responses.ToList();
@@ -56,8 +56,8 @@ public static class DcrGraphOptimizer
     /// </summary>
     /// <param name="graph">DcrGraph with potential transitive excludes</param>
     /// <param name="alternatePrecedence">
-    ///     Alternate precedence relations of a given graph providing additional information to identify irrelevant
-    ///     excludes
+    ///     Alternate precedence relations of a given graph providing additional information to identify redundant
+    ///     Exclude relations.
     /// </param>
     public static void RemoveTransitiveExcludes(DcrGraph graph, HashSet<(string, string)> alternatePrecedence)
     {
@@ -108,7 +108,7 @@ public static class DcrGraphOptimizer
         while (stack.Count > 0)
         {
             string a = stack.Pop();
-            if (!adj.TryGetValue(a, out List<string> succ)) continue;
+            if (!adj.TryGetValue(a, out List<string>? succ)) continue;
 
             foreach (string successor in succ)
             {

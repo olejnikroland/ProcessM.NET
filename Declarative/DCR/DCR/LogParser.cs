@@ -9,25 +9,26 @@ using LogImport.Models;
 public static class LogParser
 {
     /// <summary>
-    ///     Parses imported log into traces
+    ///     Parses imported log into traces.
     /// </summary>
-    /// <param name="log">Imported log</param>
-    /// <param name="id_column">Name of a id column in an imported .csv file</param>
-    /// <param name="activity_column">Name of an activity column in an imported .csv file</param>
-    /// <returns>List of traces</returns>
+    /// <param name="log">Imported event log.</param>
+    /// <param name="idColumn">Name of a column with ids in the imported .csv file.</param>
+    /// <param name="activityColumn">Name of a column with activities in the imported .csv file.</param>
+    /// <param name="timestampColumn">Name of a column with timestamp in the imported .csv file.</param>
+    /// <returns>List of traces from the given log.</returns>
     public static List<List<string>> ParseToTraces(
         ImportedEventLog log,
-        string id_column,
-        string activity_column,
-        string timestamp_column
+        string idColumn,
+        string activityColumn,
+        string timestampColumn
     )
     {
         var headers = log.Headers.ToList();
         var rows = log.Rows;
 
-        int caseIdIndex = headers.FindIndex(h => h.Equals(id_column, StringComparison.OrdinalIgnoreCase));
-        int activityIndex = headers.FindIndex(h => h.Equals(activity_column, StringComparison.OrdinalIgnoreCase));
-        int timestampIndex = headers.FindIndex(h => h.Equals(timestamp_column, StringComparison.OrdinalIgnoreCase));
+        int caseIdIndex = headers.FindIndex(h => h.Equals(idColumn, StringComparison.OrdinalIgnoreCase));
+        int activityIndex = headers.FindIndex(h => h.Equals(activityColumn, StringComparison.OrdinalIgnoreCase));
+        int timestampIndex = headers.FindIndex(h => h.Equals(timestampColumn, StringComparison.OrdinalIgnoreCase));
 
         if (caseIdIndex == -1 || activityIndex == -1 || timestampIndex == -1)
             throw new Exception("Missing id, activity or timestamp columns");

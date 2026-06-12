@@ -1,7 +1,5 @@
-﻿using System.Globalization;
-using DCR;
-using DCR.Enums;
-using DeclarativePM.Lib.Models.LogModels;
+﻿using DCR.Enums;
+using LogImport.Models;
 using Xunit;
 
 namespace DCR.Tests;
@@ -11,7 +9,7 @@ public class ConstraintsTests
     public class AtMostOneTests
     {
         [Fact]
-        public void Test1()
+        public void AtMostOne_AllActivitiesOccurOnce_ReturnsAllActivities()
         {
             var log = new List<List<string>>
             {
@@ -27,7 +25,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test2()
+        public void AtMostOne_SomeRepeatingActivities_ReturnsOnlyNonRepeatingActivities()
         {
             var log = new List<List<string>>
             {
@@ -43,7 +41,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test3()
+        public void AtMostOne_ActivityRepeatedInOneTrace_ReturnNonRepeatingActivities()
         {
             var log = new List<List<string>>
             {
@@ -51,7 +49,7 @@ public class ConstraintsTests
                 new() { "Activity A", "Activity A", "Activity B" }
             };
 
-            var result = Constraints.AtMostOne(log, 1.0);
+            var result = Constraints.AtMostOne(log);
 
             Assert.Equal(new HashSet<(string, string)>
             {
@@ -60,7 +58,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test4()
+        public void AtMostOne_ActivityRepeatedInOneTraceHalfThreshold_ReturnsAllActivities()
         {
             var log = new List<List<string>>
             {
@@ -77,7 +75,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test5()
+        public void AtMostOne_ActivityRepeatedZeroThreshold_ReturnsAllActivities()
         {
             var log = new List<List<string>>
             {
@@ -93,7 +91,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test117()
+        public void AtMostOne_EmptyLog_ReturnsEmptyResult()
         {
             var log = new List<List<string>>();
 
@@ -103,7 +101,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test6()
+        public void AtMostOne_EmptyLogWithTwoTraces_ReturnsEmptyResult()
         {
             var log = new List<List<string>>
             {
@@ -117,13 +115,13 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test7()
+        public void AtMostOne_ActivityRepeatsInOneOfThreeTracesTwoThirdThreshold_ReturnsActivity()
         {
             var log = new List<List<string>>
             {
                 new() { "Activity A" },
                 new() { "Activity A", "Activity A" },
-                new() { }
+                new()
             };
 
             var result = Constraints.AtMostOne(log, 2.0 / 3.0);
@@ -135,7 +133,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test8()
+        public void AtMostOne_MultipleTracesOneActivityRepeatsInOneTrace_ReturnsNonRepeatingActivities()
         {
             var log = new List<List<string>>
             {
@@ -156,7 +154,7 @@ public class ConstraintsTests
     public class PrecedenceTests
     {
         [Fact]
-        public void Test9()
+        public void Precedence_ABeforeB_ReturnsCorrectResult()
         {
             var log = new List<List<string>>
             {
@@ -170,7 +168,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test10()
+        public void Precedence_BBeforeA_ReturnsCorrectResult()
         {
             var log = new List<List<string>>
             {
@@ -184,7 +182,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test11()
+        public void Precedence_MultipleTracesABeforeBInAllTraces_ReturnsOnlyPrecedenceAB()
         {
             var log = new List<List<string>>
             {
@@ -199,7 +197,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test12()
+        public void Precedence_TwoTracesWithTwoActivitiesSwitchedOrderInEachTrace_DoesNotReturnAnyPrecedence()
         {
             var log = new List<List<string>>
             {
@@ -207,13 +205,14 @@ public class ConstraintsTests
                 new() { "Activity B", "Activity A" }
             };
 
-            var result = Constraints.Precedence(log, 1.0);
+            var result = Constraints.Precedence(log);
 
             Assert.DoesNotContain(("Activity A", "Activity B"), result);
+            Assert.DoesNotContain(("Activity B", "Activity A"), result);
         }
 
         [Fact]
-        public void Test13()
+        public void Precedence_TwoTracesWithTwoActivitiesSwitchedOrderInEachTraceHalfThreshold_ReturnsBothPossiblePrecedence()
         {
             var log = new List<List<string>>
             {
@@ -224,10 +223,11 @@ public class ConstraintsTests
             var result = Constraints.Precedence(log, 0.5);
 
             Assert.Contains(("Activity A", "Activity B"), result);
+            Assert.Contains(("Activity B", "Activity A"), result);
         }
 
         [Fact]
-        public void Test14()
+        public void Precedence_ABeforeBInOneTraceBMissingInSecondTrace_ReturnsPrecedenceAB()
         {
             var log = new List<List<string>>
             {
@@ -241,7 +241,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test153()
+        public void Precedence_OneTrace_ReturnsAllPossiblePrecedences()
         {
             var log = new List<List<string>>
             {
@@ -257,7 +257,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test15()
+        public void Precedence_ThresholdAboveOne_ReturnsEmpty()
         {
             var log = new List<List<string>>
             {
@@ -273,7 +273,7 @@ public class ConstraintsTests
     public class ResponseTests
     {
         [Fact]
-        public void Test16()
+        public void Response_BAfterAInOneTraceBMissingInSecondTrace_ReturnsResponseAB()
         {
             var log = new List<List<string>>
             {
@@ -287,7 +287,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test17()
+        public void Response_BNotPresentInLog_DoesNotContainBInResult()
         {
             var log = new List<List<string>>
             {
@@ -298,10 +298,13 @@ public class ConstraintsTests
             var result = Constraints.Response(log);
 
             Assert.DoesNotContain(("Activity A", "Activity B"), result);
+            Assert.DoesNotContain(("Activity G", "Activity B"), result);
+            Assert.DoesNotContain(("Activity H", "Activity B"), result);
+            Assert.DoesNotContain(("Activity I", "Activity B"), result);
         }
 
         [Fact]
-        public void Test18()
+        public void Response_BFollowsActivityInTwoTraces_ReturnsAllTracesWithBFollowing()
         {
             var log = new List<List<string>>
             {
@@ -313,10 +316,11 @@ public class ConstraintsTests
             var result = Constraints.Response(log);
 
             Assert.Contains(("Activity A", "Activity B"), result);
+            Assert.Contains(("Activity G", "Activity B"), result);
         }
 
         [Fact]
-        public void Test19()
+        public void Response_BTwoTimesInTheSameTrace_ReturnsCorrectResponses()
         {
             var log = new List<List<string>>
             {
@@ -326,10 +330,11 @@ public class ConstraintsTests
             var result = Constraints.Response(log);
 
             Assert.Contains(("Activity A", "Activity B"), result);
+            Assert.Contains(("Activity G", "Activity B"), result);
         }
 
         [Fact]
-        public void Test20()
+        public void Response_BMissingFromOneTraceThresholdThreeQuarters_ReturnsResponseAB()
         {
             var log = new List<List<string>>
             {
@@ -343,7 +348,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test21()
+        public void Response_Response_BMissingFromOneTraceThresholdLowerThanHalf_ReturnsResponseAB()
         {
             var log = new List<List<string>>
             {
@@ -357,7 +362,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test22()
+        public void Response_ARepeatsInTrace_ReturnsCorrectResponses()
         {
             var log = new List<List<string>>
             {
@@ -367,26 +372,16 @@ public class ConstraintsTests
             var result = Constraints.Response(log);
 
             Assert.Contains(("Activity A", "Activity B"), result);
+            Assert.Contains(("Activity A", "Activity H"), result);
+            Assert.Contains(("Activity H", "Activity B"), result);
         }
-
-        [Fact]
-        public void Test23()
-        {
-            var log = new List<List<string>>
-            {
-                new() { "Activity A", "Activity B", "Activity A", "Activity G" }
-            };
-
-            var result = Constraints.Response(log);
-
-            Assert.DoesNotContain(("Activity A", "Activity B"), result);
-        }
+        
     }
 
     public class ChainPrecedenceTests
     {
         [Fact]
-        public void Test24()
+        public void ChainPrecedence_DifferentImmediatePredecessors_DoesNotReturnChainPrecedenceAB()
         {
             var log = new List<List<string>>
             {
@@ -400,7 +395,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test25()
+        public void ChainPrecedence_MultipleDifferentBPrecessors_DoesNotReturnChainPrecedenceWithAnyPredecessor()
         {
             var log = new List<List<string>>
             {
@@ -415,7 +410,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test26()
+        public void ChainPrecedence_ReversedOrderOfABInEachTrace_ReturnsEmptyResult()
         {
             var log = new List<List<string>>
             {
@@ -429,7 +424,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test27()
+        public void ChainPrecedence()
         {
             var log = new List<List<string>>
             {
@@ -443,7 +438,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test28()
+        public void ChainPrecedence_TwoDifferentSuccessors_ReturnsEmpty()
         {
             var log = new List<List<string>>
             {
@@ -453,28 +448,27 @@ public class ConstraintsTests
 
             var result = Constraints.ChainPrecedence(log);
 
-            Assert.DoesNotContain(result, r => r.Item2 == "Activity B");
+            Assert.Empty(result);
         }
-
+        
         [Fact]
-        public void Test29()
+        public void ChainPrecedence_AImmediatelyPrecedesBTwoTimes_ReturnsChainPrecedenceAB()
         {
             var log = new List<List<string>>
             {
-                new() { "Activity A", "Activity G" },
-                new() { "Activity H", "Activity I" }
+                new() { "Activity A", "Activity B", "Activity A", "Activity B" }
             };
 
             var result = Constraints.ChainPrecedence(log);
 
-            Assert.DoesNotContain(result, r => r.Item1 == "Activity B" || r.Item2 == "Activity B");
+            Assert.Contains(("Activity A", "Activity B"), result);
         }
     }
 
     public class NotChainSuccessionTests
     {
         [Fact]
-        public void Test30()
+        public void NotChainSuccession_ActivitiesFollowEachOther_DoesNotReturnActivityPairsFollowingEachOther()
         {
             var log = new List<List<string>>
             {
@@ -488,7 +482,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test31()
+        public void NotChainSuccession_ActivitiesInOneTrace_ReturnsOnlyActivitiesNotImmediatelyFollowing()
         {
             var log = new List<List<string>>
             {
@@ -498,10 +492,12 @@ public class ConstraintsTests
             var result = Constraints.NotChainSuccession(log);
 
             Assert.Contains(("Activity A", "Activity B"), result);
+            Assert.DoesNotContain(("Activity A", "Activity G"), result);
+            Assert.DoesNotContain(("Activity G", "Activity B"), result);
         }
 
         [Fact]
-        public void Test33()
+        public void NotChainSuccession_TwoTracesWithDifferentActivitiesAndDifferentOrder_ReturnsActivitiesFromBothTraces()
         {
             var log = new List<List<string>>
             {
@@ -516,7 +512,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test34()
+        public void NotChainSuccession_TwoTracesSameStartingActivity_DoesNotContainStartingActivityInAnyChainSuccession()
         {
             var log = new List<List<string>>
             {
@@ -531,7 +527,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test35()
+        public void NotChainSuccession_SameActivityFollowsItself_DoesNotContainSelfNotChainSuccession()
         {
             var log = new List<List<string>>
             {
@@ -544,7 +540,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test36()
+        public void NotChainSuccession_OneTraceWithTwoActivities_ReturnsResultInCorrectOrder()
         {
             var log = new List<List<string>>
             {
@@ -561,7 +557,7 @@ public class ConstraintsTests
     public class AlternatePrecedenceTests
     {
         [Fact]
-        public void Test37()
+        public void AlternatePrecedence_EmptyLog_ReturnsEmptyResult()
         {
             var log = new List<List<string>>();
             var result = Constraints.AlternatePrecedence(log);
@@ -569,7 +565,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test38()
+        public void AlternatePrecedence_ActivitiesNeverOccurTogether_ReturnsEmptyResult()
         {
             var log = new List<List<string>>
             {
@@ -582,7 +578,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test39()
+        public void AlternatePrecedence_ThreeActivitiesInOneTrace_ReturnsResultWithOnlyImmediatelyFollowingActivities()
         {
             var log = new List<List<string>>
             {
@@ -597,7 +593,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test40()
+        public void AlternatePrecedence_TwoTracesWithTheTwoActivitiesAndSameOrder_ReturnsOneAlternatePrecedence()
         {
             var log = new List<List<string>>
             {
@@ -612,7 +608,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test41()
+        public void AlternatePrecedence_TwoTracesWithSomeDIfferentActivitiesButBCFollowEachOtherInBoth_ReturnsAlternatePrecedenceBC()
         {
             var log = new List<List<string>>
             {
@@ -626,7 +622,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test42()
+        public void AlternatePrecedence_ImmediatePairsPresentInOneTraceMissingInOther_ReturnsBothPairs()
         {
             var log = new List<List<string>>
             {
@@ -646,7 +642,7 @@ public class ConstraintsTests
     public class DeterminePredecessorSuccessor
     {
         [Fact]
-        public void Test87()
+        public void DeterminePredecessorSuccessor_SingleTrace_ReturnsCorrectPredecessorsAndSuccessorsForEachActivity()
         {
             var log = new List<List<string>>
             {
@@ -665,7 +661,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test86()
+        public void DeterminePredecessorSuccessor_TwoTraces_ReturnsCorrectPredecessorsAndSuccessorsForEachActivity()
         {
             var log = new List<List<string>>
             {
@@ -687,7 +683,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test88()
+        public void DeterminePredecessorSuccessor_ActivityRepeatedInTrace_ReturnsCorrectPredecessorsAndSuccessorsForEachActivity()
         {
             var log = new List<List<string>>
             {
@@ -709,14 +705,14 @@ public class ConstraintsTests
     public class AreCoOccurringTests
     {
         [Fact]
-        public void Test43()
+        public void AreCoOccurring_EmtpyLog_ReturnsFalse()
         {
             var log = new List<List<string>>();
             Assert.False(Constraints.AreCoOccurring(log, "Activity A", "Activity B"));
         }
 
         [Fact]
-        public void Test44()
+        public void AreCoOccurring_LogWithDifferentActivitiesThanChecked_ReturnsFalse()
         {
             var log = new List<List<string>>
             {
@@ -727,7 +723,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test45()
+        public void AreCoOccurring_LogWithSameActivitiesAsChecked_ReturnsTrue()
         {
             var log = new List<List<string>>
             {
@@ -736,12 +732,24 @@ public class ConstraintsTests
 
             Assert.True(Constraints.AreCoOccurring(log, "Activity A", "Activity B"));
         }
+        
+        [Fact]
+        public void AreCoOccurring_ActivitiesInDifferentTraces_ReturnsFalse()
+        {
+            var log = new List<List<string>>
+            {
+                new() { "Activity A" },
+                new() { "Activity B" }
+            };
+
+            Assert.False(Constraints.AreCoOccurring(log, "Activity A", "Activity B"));
+        }
     }
 
     public class GetAllActivitiesTests
     {
         [Fact]
-        public void Test46()
+        public void GetAllActivities_EmptyLog_ReturnsEmptyList()
         {
             var log = new List<List<string>>();
             var result = Constraints.GetAllActivities(log);
@@ -749,7 +757,7 @@ public class ConstraintsTests
         }
 
         [Fact]
-        public void Test47()
+        public void GetAllActivities_LogWithActivitiesAndTwoTraces_ReturnsCorrectResult()
         {
             var log = new List<List<string>>
             {
@@ -769,7 +777,7 @@ public class DcrOptimizerTests
     public class RemoveTransitiveResponsesTests
     {
         [Fact]
-        public void Test48()
+        public void RemoveTransitiveResponses_ContainsRedundantRelation_RemovesCorrectlyOnlyRedundantRelation()
         {
             var graph = new DcrGraph
             {
@@ -789,7 +797,7 @@ public class DcrOptimizerTests
         }
 
         [Fact]
-        public void Test49()
+        public void RemoveTransitiveResponses_DoesNotContainRedundantRelation_LeavesRelationsAsIs()
         {
             var graph = new DcrGraph
             {
@@ -808,7 +816,7 @@ public class DcrOptimizerTests
         }
 
         [Fact]
-        public void Test50()
+        public void RemoveTransitiveResponses_MoreResponseRelationsContainsRedundantRelations_RemovesCorrectlyOnlyRedundantRelation()
         {
             var graph = new DcrGraph
             {
@@ -835,7 +843,7 @@ public class DcrOptimizerTests
         }
 
         [Fact]
-        public void Test51()
+        public void RemoveTransitiveResponses_TwoTracesWithoutAnySharedActivities_LeavesRelationsAsIs()
         {
             var graph = new DcrGraph
             {
@@ -854,7 +862,7 @@ public class DcrOptimizerTests
         }
 
         [Fact]
-        public void Test52()
+        public void RemoveTransitiveResponses_MoreTracesWithoutAnySharedActivities_LeavesRelationsAsIs()
         {
             var graph = new DcrGraph
             {
@@ -874,7 +882,7 @@ public class DcrOptimizerTests
     public class RemoveTransitiveConditionsTests
     {
     [Fact]
-    public void Test53()
+    public void RemoveTransitiveConditions_ContainsRedundantRelation_RemovesCorrectlyOnlyRedundantRelation()
     {
         var graph = new DcrGraph
         {
@@ -894,7 +902,7 @@ public class DcrOptimizerTests
     }
 
     [Fact]
-    public void Test54()
+    public void RemoveTransitiveConditions_DoesNotContainRedundantRelation_LeavesRelationsAsIs()
     {
         var graph = new DcrGraph
         {
@@ -913,7 +921,7 @@ public class DcrOptimizerTests
     }
 
     [Fact]
-    public void Test55()
+    public void RemoveTransitiveConditions_MoreConditionRelationsContainsRedundantRelations_RemovesCorrectlyOnlyRedundantRelation()
     {
         var graph = new DcrGraph
         {
@@ -940,7 +948,7 @@ public class DcrOptimizerTests
     }
 
     [Fact]
-    public void Test56()
+    public void RemoveTransitiveConditions_TwoTracesWithoutAnySharedActivities_LeavesRelationsAsIs()
     {
         var graph = new DcrGraph
         {
@@ -959,7 +967,7 @@ public class DcrOptimizerTests
     }
 
     [Fact]
-    public void Test57()
+    public void RemoveTransitiveConditions_MoreTracesWithoutAnySharedActivities_LeavesRelationsAsIs()
     {
         var graph = new DcrGraph
         {
@@ -979,7 +987,7 @@ public class DcrOptimizerTests
     public class RemoveTransitiveExcludesTests
     {
     [Fact]
-    public void Test58()
+    public void RemoveTransitiveExcludes_AlternatePrecedenceExists_RemoveTransitiveExclude()
     {
         var graph = new DcrGraph
         {
@@ -1002,7 +1010,7 @@ public class DcrOptimizerTests
     }
 
     [Fact]
-    public void Test59()
+    public void RemoveTransitiveExcludes_AlternatePrecedenceDoesNotExist_KeepAllExcludes()
     {
         var graph = new DcrGraph
         {
@@ -1022,7 +1030,7 @@ public class DcrOptimizerTests
     }
 
     [Fact]
-    public void Test60()
+    public void RemoveTransitiveExcludes_MultipleExcludes_RemoveOnlyRedundantOnes()
     {
         var graph = new DcrGraph
         {
@@ -1048,7 +1056,7 @@ public class DcrOptimizerTests
     }
 
     [Fact]
-    public void Test61()
+    public void RemoveTransitiveExcludes_TransitiveSelfExclude_RemovesSelfExclude()
     {
         var graph = new DcrGraph
         {
@@ -1072,7 +1080,7 @@ public class DcrOptimizerTests
 
 
         [Fact]
-        public void Test62()
+        public void RemoveTransitiveExcludes_UnrelatedExcludesAndAlternatePrecedence_KeepsAllExcludes()
         {
         var graph = new DcrGraph
         {
@@ -1100,7 +1108,7 @@ public class DcrOptimizerTests
 public class DcrGraphBuilderTests
 {
     [Fact]
-    public void Test63()
+    public void Build_LogWithTwoTraces_CorrectlyInitializeGraph()
     {
         var log = new List<List<string>>
         {
@@ -1116,7 +1124,7 @@ public class DcrGraphBuilderTests
     }
 
     [Fact]
-    public void Test64()
+    public void Build_TwoGraphDifferentThresholds_InitializedGraphsDifferInRelations()
     {
         var log = new List<List<string>>
         {
@@ -1133,7 +1141,7 @@ public class DcrGraphBuilderTests
     }
 
     [Fact]
-    public void Test65()
+    public void Build_AppliesActivityFilter_KeepsOnlyFilteredActivitiesAndTheirRelations()
     {
         var log = new List<List<string>>
         {
@@ -1155,7 +1163,7 @@ public class DcrGraphBuilderTests
     }
 
     [Fact]
-    public void Test66()
+    public void Build_AppliesRelationFilter_KeepsOnlyFilteredRelations()
     {
         var log = new List<List<string>>
         {
@@ -1172,7 +1180,7 @@ public class DcrGraphBuilderTests
     }
     
     [Fact]
-    public void Test67()
+    public void Build_SimpleLog_GraphDoesNotContainsIncludes()
     {
         var log = new List<List<string>>
         {
@@ -1186,7 +1194,7 @@ public class DcrGraphBuilderTests
     }
 
     [Fact]
-    public void Test68()
+    public void Build_SimpleLog_InitializesGraphWithCorrectSelfExcludes()
     {
         var log = new List<List<string>>
         {
@@ -1194,12 +1202,13 @@ public class DcrGraphBuilderTests
         };
 
         var graph = DcrGraphBuilder.Build(log);
-
+        
+        Assert.Contains(("Activity A", "Activity A"), graph.Excludes);
         Assert.Contains(("Activity B", "Activity B"), graph.Excludes);
     }
 
     [Fact]
-    public void Test69()
+    public void Build_SimpleLogWithThreeActivities_InitializesGraphWithRemovedTransitiveCondition()
     {
         var log = new List<List<string>>
         {
@@ -1209,10 +1218,12 @@ public class DcrGraphBuilderTests
         var graph = DcrGraphBuilder.Build(log);
 
         Assert.DoesNotContain(("Activity A", "Activity C"), graph.Conditions);
+        Assert.Contains(("Activity A", "Activity B"), graph.Conditions);
+        Assert.Contains(("Activity B", "Activity C"), graph.Conditions);
     }
 
     [Fact]
-    public void Test70()
+    public void Build_SimpleLogWithThreeActivities_InitializesGraphWithRemovedTransitiveResponse()
     {
         var log = new List<List<string>>
         {
@@ -1222,10 +1233,12 @@ public class DcrGraphBuilderTests
         var graph = DcrGraphBuilder.Build(log);
 
         Assert.DoesNotContain(("Activity A", "Activity C"), graph.Responses);
+        Assert.Contains(("Activity A", "Activity B"), graph.Responses);
+        Assert.Contains(("Activity B", "Activity C"), graph.Responses);
     }
 
     [Fact]
-    public void Test71()
+    public void Build_TwoTracesWithOneActivity_CreatesMutualExcludes()
     {
         var log = new List<List<string>>
         {
@@ -1240,7 +1253,7 @@ public class DcrGraphBuilderTests
     }
 
     [Fact]
-    public void Test72()
+    public void Build_TwoTracesWithOneConsistentStartingActivity_DoesNotAddIncorrectExcludes()
     {
         var log = new List<List<string>>
         {
@@ -1251,6 +1264,7 @@ public class DcrGraphBuilderTests
         var graph = DcrGraphBuilder.Build(log);
 
         Assert.DoesNotContain(("Activity A", "Activity C"), graph.Excludes);
+        Assert.DoesNotContain(("Activity A", "Activity B"), graph.Excludes);
     }
 }
 
@@ -1259,7 +1273,7 @@ public class DcrConformanceCheckerTests
     public class CheckTrace
     {
         [Fact]
-        public void Test73()
+        public void CheckTrace_SimpleGraphAndSimpleLogWithSameActivities_ReturnsTrue()
         {
             var graph = new DcrGraph
             {
@@ -1275,7 +1289,7 @@ public class DcrConformanceCheckerTests
         }
 
         [Fact]
-        public void Test74()
+        public void CheckTrace_LogContainsUknownActivities_ReturnsTrue()
         {
             var graph = new DcrGraph
             {
@@ -1291,7 +1305,7 @@ public class DcrConformanceCheckerTests
         }
 
         [Fact]
-        public void Test75()
+        public void CheckTrace_ConditionViolated_ReturnsFalse()
         {
             var graph = new DcrGraph
             {
@@ -1311,7 +1325,7 @@ public class DcrConformanceCheckerTests
         }
 
         [Fact]
-        public void Test76()
+        public void CheckTrace_ConditionSatisfied_ReturnsTrue()
         {
             var graph = new DcrGraph
             {
@@ -1331,7 +1345,7 @@ public class DcrConformanceCheckerTests
         }
 
         [Fact]
-        public void Test77()
+        public void CheckTrace_ResponseViolated_ReturnsFalse()
         {
             var graph = new DcrGraph
             {
@@ -1351,7 +1365,7 @@ public class DcrConformanceCheckerTests
         }
 
         [Fact]
-        public void Test78()
+        public void CheckTrace_ResponseSatisfied_ReturnsTrue()
         {
             var graph = new DcrGraph
             {
@@ -1371,7 +1385,7 @@ public class DcrConformanceCheckerTests
         }
 
         [Fact]
-        public void Test79()
+        public void CheckTrace_ExcludeViolated_ReturnsFalse()
         {
             var graph = new DcrGraph
             {
@@ -1391,7 +1405,7 @@ public class DcrConformanceCheckerTests
         }
 
         [Fact]
-        public void Test80()
+        public void CheckTrace_IncludeSatisfied_ReturnsTrue()
         {
             var graph = new DcrGraph
             {
@@ -1411,7 +1425,7 @@ public class DcrConformanceCheckerTests
         }
 
         [Fact]
-        public void Test81()
+        public void CheckTrace_MultipleActivitiesReponsesViolated_ReturnsFalse()
         {
             var graph = new DcrGraph
             {
@@ -1432,7 +1446,7 @@ public class DcrConformanceCheckerTests
         }
 
         [Fact]
-        public void Test82()
+        public void CheckTrace_UnknownActivityExclude_ReturnsTrue()
         {
             var graph = new DcrGraph
             {
@@ -1455,7 +1469,7 @@ public class DcrConformanceCheckerTests
         }
 
         [Fact]
-        public void Test83()
+        public void CheckTrace_GraphWithMultipleRelationsResponseViolated_ReturnsFalse()
         {
             var graph = new DcrGraph
             {
@@ -1479,44 +1493,73 @@ public class LogParse
     public class ParseToTraces
     {
         [Fact]
-        public void Test84()
+        public void ParseToTraces_ValidImportedLog_ReturnsValidParsedSortedLog()
         {
-            var headers = new List<string> { "CaseId", "Activity", "Timestamp" };
-            var rows = new List<List<string>>
-            {
-                new() { "1", "Activity B", "08/03/2025 19:35:20" },
-                new() { "2", "Activity D", "08/03/2025 19:35:10" },
-                new() { "1", "Activity A", "08/03/2025 19:35:15" },
-                new() { "2", "Activity F", "08/03/2025 19:35:30" },
-                new() { "1", "Activity C", "08/03/2025 19:35:25" },
-                new() { "2", "Activity E", "08/03/2025 19:35:20" }
-            };
+            var imported = new ImportedEventLog(
+                new List<string[]>
+                {
+                    new[] { "1", "Activity B", "08/03/2025 19:35:20" },
+                    new[] { "2", "Activity D", "08/03/2025 19:35:10" },
+                    new[] { "1", "Activity A", "08/03/2025 19:35:15" },
+                    new[] { "2", "Activity F", "08/03/2025 19:35:30" },
+                    new[] { "1", "Activity C", "08/03/2025 19:35:25" },
+                    new[] { "2", "Activity E", "08/03/2025 19:35:20" }
+                },
+                new[] { "CaseId", "Activity", "Timestamp" }
+            );
+            
+            var result = LogParser.ParseToTraces(imported, "CaseId", "Activity", "Timestamp");
 
-            int caseIdIndex = headers.FindIndex(h => h.Equals("CaseId", StringComparison.OrdinalIgnoreCase));
-            int activityIndex = headers.FindIndex(h => h.Equals("Activity", StringComparison.OrdinalIgnoreCase));
-            int timestampIndex = headers.FindIndex(h => h.Equals("Timestamp", StringComparison.OrdinalIgnoreCase));
 
-            if (caseIdIndex == -1 || activityIndex == -1 || timestampIndex == -1)
-                throw new Exception("Missing id, activity or timestamp columns");
+            Assert.Equal(2, result.Count);
 
-            const string tsFormat = "dd/MM/yyyy HH:mm:ss";
-
-            var grouped = rows
-                .GroupBy(row => row[caseIdIndex])
-                .Select(g => g
-                    .OrderBy(row => DateTime.ParseExact(row[timestampIndex], tsFormat, CultureInfo.InvariantCulture))
-                    .Select(row => row[activityIndex])
-                    .ToList()
-                )
-                .ToList();
-
-            Assert.Equal(2, grouped.Count);
-
-            List<string> trace1 = grouped.Single(t => t.Contains("Activity A"));
-            List<string> trace2 = grouped.Single(t => t.Contains("Activity D"));
+            List<string> trace1 = result.Single(t => t.Contains("Activity A"));
+            List<string> trace2 = result.Single(t => t.Contains("Activity D"));
 
             Assert.Equal(new[] { "Activity A", "Activity B", "Activity C" }, trace1);
             Assert.Equal(new[] { "Activity D", "Activity E", "Activity F" }, trace2);
+        }
+        
+        [Fact]
+        public void ParseToTraces_IncorrectIdColumn_ThrowsException()
+        {
+            var imported = new ImportedEventLog(
+                new List<string[]>
+                {
+                    new[] { "1", "Activity A", "08/03/2025 19:35:20" }
+                },
+                new[] { "CaseId", "Activity", "Timestamp" }
+            );
+
+            Assert.Throws<Exception>(() => LogParser.ParseToTraces(imported, "Incorrect", "Activity", "Timestamp"));
+        }
+        
+        [Fact]
+        public void ParseToTraces_IncorrectActivityColumn_ThrowsException()
+        {
+            var imported = new ImportedEventLog(
+                new List<string[]>
+                {
+                    new[] { "1", "Activity A", "08/03/2025 19:35:20" }
+                },
+                new[] { "CaseId", "Activity", "Timestamp" }
+            );
+
+            Assert.Throws<Exception>(() => LogParser.ParseToTraces(imported, "CaseId", "Incorrect", "Timestamp"));
+        }
+        
+        [Fact]
+        public void ParseToTraces_IncorrectTimestampColumn_ThrowsException()
+        {
+            var imported = new ImportedEventLog(
+                new List<string[]>
+                {
+                    new[] { "1", "Activity A", "08/03/2025 19:35:20" }
+                },
+                new[] { "CaseId", "Activity", "Timestamp" }
+            );
+
+            Assert.Throws<Exception>(() => LogParser.ParseToTraces(imported, "CaseId", "Activity", "Incorrect"));
         }
     }
 }

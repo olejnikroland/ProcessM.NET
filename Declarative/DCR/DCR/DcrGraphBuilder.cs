@@ -8,31 +8,40 @@ using System.Collections.Generic;
 public static class DcrGraphBuilder
 {
     /// <summary>
-    ///     Parses imported log into a list of traces and subsequently builds DcrGraph
+    ///     Parses the imported event log into a list of traces and subsequently builds DcrGraph.
     /// </summary>
-    /// <param name="imported">Imported log</param>
-    /// <param name="id_column">Name of a column with ids in imported .csv file</param>
-    /// <param name="activity_column">Name of a column with activities in imported .csv file</param>
-    /// <returns>DcrGraph built from given imported log</returns>
+    /// <param name="imported">Imported event log</param>
+    /// <param name="idColumn">Name of a column with ids in the imported .csv file.</param>
+    /// <param name="activityColumn">Name of a column with activities in the imported .csv file.</param>
+    /// <param name="timestampColumn">Name of a column with timestamp in the imported .csv file.</param>
+    /// <param name="activityFilter">List of activity names to be filtered in the graph.</param>
+    /// <param name="relationFilter">List of enums representing relations to be filtered in the graph.</param>
+    /// <param name="threshold">Minimum proportion of traces in which a relation must hold to be discovered,
+    /// expressed as a value between 0.0 and 1.0.</param>
+    /// <returns>DcrGraph built from given imported log.</returns>
     public static DcrGraph BuildFromImportedLog(
         ImportedEventLog imported,
-        string id_column,
-        string activity_column,
-        string timestamp_column,
+        string idColumn,
+        string activityColumn,
+        string timestampColumn,
         HashSet<string>? activityFilter = null,
         HashSet<RelationType>? relationFilter = null,
         double threshold = 1.0
     )
     {
-        List<List<string>> traces = LogParser.ParseToTraces(imported, id_column, activity_column, timestamp_column);
+        List<List<string>> traces = LogParser.ParseToTraces(imported, idColumn, activityColumn, timestampColumn);
         return Build(traces, activityFilter, relationFilter, threshold);
     }
 
     /// <summary>
-    ///     Builds DcrGraph from a list of traces
+    ///     Builds DcrGraph from a list of traces.
     /// </summary>
-    /// <param name="log">List of traces from a log</param>
-    /// <returns>DCR graph built from given traces</returns>
+    /// <param name="log">List of traces from a log.</param>
+    /// <param name="activityFilter">List of activity names to be filtered in the graph.</param>
+    /// <param name="relationFilter">List of enums representing relations to be filtered in the graph.</param>
+    /// <param name="threshold">Minimum proportion of traces in which a relation must hold to be discovered,
+    /// expressed as a value between 0.0 and 1.0.</param>
+    /// <returns>A DCR graph built from given traces.</returns>
     public static DcrGraph Build(
         List<List<string>> log,
         HashSet<string>? activityFilter = null,
@@ -119,7 +128,7 @@ public static class DcrGraphBuilder
         DcrGraphOptimizer.RemoveTransitiveResponses(graph);
         
         
-        if (activityFilter != null && activityFilter.Count > 0)
+        if (activityFilter is { Count: > 0 })
         {
             graph.Activities = graph.Activities.Where(activityFilter.Contains).ToHashSet();
 
@@ -136,28 +145,20 @@ public static class DcrGraphBuilder
                 .Where(r => activityFilter.Contains(r.Item1) && activityFilter.Contains(r.Item2)).ToHashSet();
         }
 
-        if (relationFilter != null && relationFilter.Count > 0)
-        {
-            if (!relationFilter.Contains(RelationType.Conditions))
-            {
-                graph.Conditions = new HashSet<(string, string)>();
-            };
+        if (relationFilter is not { Count: > 0 })
+            return graph;
 
-            if (!relationFilter.Contains(RelationType.Responses))
-            {
-                graph.Responses = new HashSet<(string, string)>();
-            };
-            
-            if (!relationFilter.Contains(RelationType.Excludes))
-            {
-                graph.Excludes = new HashSet<(string, string)>();
-            };
-            
-            if (!relationFilter.Contains(RelationType.Includes))
-            {
-                graph.Includes = new HashSet<(string, string)>();
-            };
-        }
+        if (!relationFilter.Contains(RelationType.Conditions))
+            graph.Conditions = new HashSet<(string, string)>();
+
+        if (!relationFilter.Contains(RelationType.Responses))
+            graph.Responses = new HashSet<(string, string)>();
+
+        if (!relationFilter.Contains(RelationType.Excludes))
+            graph.Excludes = new HashSet<(string, string)>();
+
+        if (!relationFilter.Contains(RelationType.Includes))
+            graph.Includes = new HashSet<(string, string)>();
 
         return graph;
     }
